@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <!-- Título que aparece en la pestaña del navegador -->
+    <title>Cuenta creada</title>
+    <!-- Icono que aparece en la pestaña del navegador -->
+    <link rel="shortcut icon" href="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2023.ico"/>
+
+    <!-- Fuente de Google Fonts para el estilo de la página -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Metaetiqueta para redirigir automáticamente a la ruta 'mensaje' después de 3 segundos -->
+    <meta http-equiv="refresh" content="3;url={{ url_for('mensaje') }}">
+
+    <!-- Estilos en línea para centrar el contenido en la página (css) -->
+    <style>
+        /* Asegura que tanto el HTML como el BODY llenen toda la altura de la ventana */
+        html, body {
+            height: 100%; /* Ocupa el 100% de la altura de la ventana del navegador */
+            margin: 0; /* Elimina el margen por defecto de los elementos */
+            display: flex; /* Usa el modelo de diseño Flexbox para centrar el contenido */
+            justify-content: center; /* Centra el contenido horizontalmente */
+            align-items: center; /* Centra el contenido verticalmente */
+            background-color: black !important; /* Fondo negro */
+        }
+
+        .text-success {
+            color: #E50914; /* Color de texto rojo */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-success text-center">
+        <h1>¡Cuenta creada con éxito!</h1>
+        <p>Ahora por favor introduzca sus datos para iniciar sesión</p>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <!-- Título que aparece en la pestaña del navegador -->
+    <title>Catálogo</title>
+    <!-- Icono que aparece en la pestaña del navegador -->
+    <link rel="shortcut icon" href="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2023.ico"/>
+
+    <!-- Hoja de estilo propia (main.css) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+
+    <!-- Tema de Bootstrap (LUX) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lux/bootstrap.min.css" integrity="sha384-9+PGKSqjRdkeAU7Eu4nkJU8RFaH8ace8HGXnkiKMP9I9Te0GJ4/km3L1Z8tXigpG" crossorigin="anonymous">
+
+    <!-- Fuente de Google Fonts para el estilo de la página -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/fontawesome.min.css" integrity="sha384-NvKbDTEnL+A8F/AA5Tc5kmMLSJHUO868P+lDtTpJIeQdGYaUIuLr4lVGOEA1OcMy" crossorigin="anonymous">
+
+    <!-- jQuery, Popper.js, and Bootstrap JS (necesario para el funcionamiento del modal) -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9JoL8YdN/cfg5pjtEOsn7d8Q8iN+zV9YLD9i7" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <!-- Divido la página en 4 -->
+    <main class="container p-4">
+
+        <header class="d-flex justify-content-between align-items-center p-3"> <!-- Activo el flexbox con d-flex, separo los elementos a los extremos y los alineo verticalmente, finalmente añado un padding -->
+            <form action="/volver-a-home"> <!-- Botón logo para volver a la página de home (mostrar-catálogo) -->
+                <button type="submit" class="btn p-0 border-0 bg-transparent"> <!-- Elimino los estilos por defecto de Bootstrap -->
+                    <img src="{{ url_for('static', filename='recursos/logo.png') }}" alt="Netflix Logo" style="height: 100px;">
+                </button>
+            </form>
+            <form action="/logout"> <!-- Botón log out (posicionado arriba a la derecha de la página) -->
+                <button type="submit" class="btn btn-primary btn-block">
+                Cerrar Sesión
+                </button>
+            </form>
+        </header>
+
+        <div> <!-- Creo enlaces <a> para no tener que volver a home cada vez si el administrador quiere cambiar de página -->
+            <a href="/modo-edit-usuarios" class="a-custom">Usuarios</a>
+            |
+            <a href="/modo-edit-contenido" class="a-custom">Contenido</a>
+        </div>
+
+        <div class="card mt-5 p-3 card-custom">
+            <div class="card-header">
+                <h1 class="display-4 text-center">USUARIOS</h1>
+            </div>
+
+            <div class="card-body">
+
+                <!-- Tabla con todos los usuarios -->
+                <div>
+                    <h3 class="text-center"></h3>
+                    <ul class="list-group list-margin">
+
+                        <div class="crear-buscar-container">
+                            <!-- Enlace para abrir el modal de creación -->
+                            <a href="#" class="btn btn-success" data-toggle="modal" data-target="#crearModal">
+                                CREAR
+                            </a>
+
+                            <!-- Pequeño formulario de búsqueda -->
+                            <form action="/buscar-modo-admin/{{ 'usuarios' }}" method="post" class="search-form">
+                                <input type="text" name="busqueda" placeholder="Buscar..." class="form-control" autofocus>
+                                <button class="btn btn-outline-light" type="submit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+
+                         <!-- Modal para introducir los datos del usuario -->
+                        <div class="modal fade" id="crearModal" tabindex="-1" role="dialog" aria-labelledby="crearModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="crearModalLabel">Nuevo Usuario</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+
+                                <form action="/modo-edit-usuario-crear/" method="post">
+
+                                    <div class="modal-body">
+
+                                        <!-- Campo de texto de nombre -->
+                                        <div class="form-group">
+                                          <label class="form-label mt-4">Nombre</label>
+                                          <input type="text" name="nombre" placeholder="Nombre" class="form-control" autofocus>
+                                        </div>
+                                        <!-- Campo de texto de apellidos -->
+                                        <div class="form-group">
+                                          <label class="form-label mt-4">Apellidos</label>
+                                          <input type="text" name="apellidos" placeholder="Apellidos" class="form-control" autofocus>
+                                        </div>
+                                        <!-- Campo de texto de usuario -->
+                                        <div class="form-group">
+                                          <label class="form-label mt-4">Usuario</label>
+                                          <input type="text" name="usuario" placeholder="Usuario" class="form-control" autofocus>
+                                        </div>
+                                        <!-- Campo de texto de correo electrónico -->
+                                        <div class="form-group">
+                                          <label class="form-label mt-4">Correo electrónico</label>
+                                          <input type="text" name="correo" placeholder="Correo electrónico" class="form-control" autofocus>
+                                        </div>
+                                        <!-- Campo de texto de la contraseña -->
+                                        <div class="form-group">
+                                          <label class="form-label mt-4">Contraseña</label>
+                                          <input type="text" name="contrasena" placeholder="Contraseña" class="form-control" autofocus>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <!-- Botón crear -->
+                                        <button type="submit" class="btn btn-success">CREAR</button>
+                                    </div>
+
+                                </form>
+                            </div>
+                            </div>
+                        </div>
+
+                        {% if busqueda %}
+
+                        {% for usuario in busqueda %}
+
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-secondary"> <!-- Pongo el contenido separado por filas dentro de una tabla -->
+
+                            <div class="title">
+                                {{ usuario.usuario }}
+                            </div>
+
+                            <div class="icon-container">
+                                <!-- Icono información que abre el modal que muestra los datos del usuario -->
+                                <a href="#" data-toggle="modal" data-target="#infoModal{{ usuario.id }}" class="icon-margin">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                                    </svg>
+                                </a>
+
+                                <!-- Modal para mostrar información del usuario -->
+                                <div class="modal fade" id="infoModal{{ usuario.id }}" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="infoModalLabel">{{ usuario.usuario }}</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            Nombre: {{ usuario.nombre }}
+                                            <br>Apellidos: {{ usuario.apellidos }}
+                                            <br>Correo: {{ usuario.correo }}
+                                            <br>Contraseña: {{ usuario.contrasena }}
+
+                                        </div>
+
+                                    </div>
+                                    </div>
+                                </div>
+
+                                <!-- Icono edición que abre el modal para editar los datos del usuario -->
+                                <a href="#" data-toggle="modal" data-target="#editarModal{{ usuario.id }}" class="icon-margin">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                      <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                    </svg>
+                                </a>
+
+                                <!-- Modal para introducir los datos del usuario -->
+                                <div class="modal fade" id="editarModal{{ usuario.id }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="editarModalLabel">Edición</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+
+                                        <form action="/modo-edit-usuario-editar/{{ usuario.id }}" method="post">
+
+                                            <div class="modal-body">
+
+                                                <!-- Campo de texto de nombre -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Nombre</label>
+                                                  <input type="text" name="nombre" placeholder="{{usuario.nombre}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de texto de apellidos -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Apellidos</label>
+                                                  <input type="text" name="apellidos" placeholder="{{usuario.apellidos}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de texto de usuario -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Usuario</label>
+                                                  <input type="text" name="usuario" placeholder="{{usuario.usuario}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de texto de correo electrónico -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Correo electrónico</label>
+                                                  <input type="text" name="correo" placeholder="{{usuario.correo}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de contraseña -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Contraseña</label>
+                                                  <input type="text" name="contrasena" placeholder="{{usuario.contrasena}}" class="form-control" autofocus>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+
+                                                <!-- Botón para guardar los elementos modificados -->
+                                                <button type="submit" class="btn btn-success">GUARDAR</button>
+
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    </div>
+                                </div>
+
+                                <!-- Icono eliminar que abre el modal -->
+                                <a href="#" data-toggle="modal" data-target="#eliminarModal{{ usuario.id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                </a>
+
+                                <!-- Modal para confirmar eliminación del usuario -->
+                                <div class="modal fade" id="eliminarModal{{ usuario.id }}" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="eliminarModalLabel">¿Estás seguro?</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            ¿Estás seguro de que quieres eliminar al usuario '{{ usuario.usuario }}'?
+
+                                        </div>
+
+                                        <div class="modal-footer">
+
+                                            <!-- Botón eliminar -->
+                                            <form action="/modo-edit-usuario-eliminar/{{ usuario.id }}">
+                                                <button type="submit" class="btn btn-danger">ELIMINAR</button>
+                                            </form>
+
+                                        </div>
+
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </li>
+
+                        {% endfor %}
+
+                        {% else %}
+
+                        {% for usuario in lista %}
+
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-secondary"> <!-- Pongo el contenido separado por filas dentro de una tabla -->
+
+                            <div class="title">
+                                {{ usuario.usuario }}
+                            </div>
+
+                            <div class="icon-container">
+                                <!-- Icono información que abre el modal que muestra los datos del usuario -->
+                                <a href="#" data-toggle="modal" data-target="#infoModal{{ usuario.id }}" class="icon-margin">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                                    </svg>
+                                </a>
+
+                                <!-- Modal para mostrar información del usuario -->
+                                <div class="modal fade" id="infoModal{{ usuario.id }}" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="infoModalLabel">{{ usuario.usuario }}</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            Nombre: {{ usuario.nombre }}
+                                            <br>Apellidos: {{ usuario.apellidos }}
+                                            <br>Correo: {{ usuario.correo }}
+                                            <br>Contraseña: {{ usuario.contrasena }}
+
+                                        </div>
+
+                                    </div>
+                                    </div>
+                                </div>
+
+                                <!-- Icono edición que abre el modal para editar los datos del usuario -->
+                                <a href="#" data-toggle="modal" data-target="#editarModal{{ usuario.id }}" class="icon-margin">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                      <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                    </svg>
+                                </a>
+
+                                <!-- Modal para introducir los datos del usuario -->
+                                <div class="modal fade" id="editarModal{{ usuario.id }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="editarModalLabel">Edición</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+
+                                        <form action="/modo-edit-usuario-editar/{{ usuario.id }}" method="post">
+
+                                            <div class="modal-body">
+
+                                                <!-- Campo de texto de nombre -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Nombre</label>
+                                                  <input type="text" name="nombre" placeholder="{{usuario.nombre}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de texto de apellidos -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Apellidos</label>
+                                                  <input type="text" name="apellidos" placeholder="{{usuario.apellidos}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de texto de usuario -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Usuario</label>
+                                                  <input type="text" name="usuario" placeholder="{{usuario.usuario}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de texto de correo electrónico -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Correo electrónico</label>
+                                                  <input type="text" name="correo" placeholder="{{usuario.correo}}" class="form-control" autofocus>
+                                                </div>
+                                                <!-- Campo de contraseña -->
+                                                <div class="form-group">
+                                                  <label class="form-label mt-4">Contraseña</label>
+                                                  <input type="text" name="contrasena" placeholder="{{usuario.contrasena}}" class="form-control" autofocus>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+
+                                                <!-- Botón para guardar los elementos modificados -->
+                                                <button type="submit" class="btn btn-success">GUARDAR</button>
+
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    </div>
+                                </div>
+
+                                <!-- Icono eliminar que abre el modal -->
+                                <a href="#" data-toggle="modal" data-target="#eliminarModal{{ usuario.id }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                </a>
+
+                                <!-- Modal para confirmar eliminación del usuario -->
+                                <div class="modal fade" id="eliminarModal{{ usuario.id }}" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="eliminarModalLabel">¿Estás seguro?</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <!-- Cerrar ventana -->
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            ¿Estás seguro de que quieres eliminar al usuario '{{ usuario.usuario }}'?
+
+                                        </div>
+
+                                        <div class="modal-footer">
+
+                                            <!-- Botón eliminar -->
+                                            <form action="/modo-edit-usuario-eliminar/{{ usuario.id }}">
+                                                <button type="submit" class="btn btn-danger">ELIMINAR</button>
+                                            </form>
+
+                                        </div>
+
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </li>
+
+                        {% endfor %}
+
+                        {% endif %}
+
+                    </ul>
+                </div>
+
+                <!-- Muestra mensaje de error -->
+                {% if error_message %}
+                <div class="alert alert-danger mt-3 text-center" role="alert">
+                    {{ error_message }}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+
+</html>

@@ -1,0 +1,111 @@
+body {
+    background-color: black !important; /* Fondo negro */
+}
+
+h1 {
+    color: white !important; /* Color blanco para los títulos h1 */
+}
+
+h2 {
+    color: white !important; /* Color blanco para los títulos h2 */
+    text-align: center; /* Centramos los títulos h2 */
+}
+
+.a-custom {
+    color: white !important; /* Color gris para los iconos de información */
+}
+
+.btn-custom {
+    width: 200px; /* Ancho fijo del botón */
+    height: 50px; /* Alto fijo del botón */
+    text-align: center; /* Centramos el texto dentro del botón */
+    font-size: 18px; /* Tamaño de fuente del botón */
+    font-weight: bold; /* Texto en negrita */
+}
+
+.card-custom {
+    background-color: #222222 !important; /* Fondo gris oscuro para la tarjeta */
+    padding: 20px; /* Espaciado interno de la tarjeta */
+    border-radius: 10px; /* Bordes redondeados de la tarjeta */
+}
+
+.search-container {
+    display: flex; /* Usamos flexbox para alinear los elementos */
+    justify-content: flex-end; /* Muevo el buscador a la derecha */
+    margin-bottom: 40px; /* Añado un margen inferior */
+}
+
+.search-form {
+    display: flex; /* Usamos flexbox dentro del formulario */
+    align-items: ; /* FALTA VALOR: Alinear elementos verticalmente dentro del formulario */
+    background-color: #333; /* Fondo gris oscuro para el formulario */
+    border-radius: 5px; /* Bordes redondeados para el formulario */
+    overflow: hidden; /* Oculta los bordes sobrantes */
+    width: 50%; /* El formulario ocupa el 50% del contenedor */
+}
+
+.search-form input {
+    flex: 1; /* El input ocupa todo el espacio disponible */
+    padding: 10px; /* Espaciado interno del input */
+    border: none; /* Eliminamos el borde del input */
+    background-color: #333; /* Fondo gris oscuro para el input */
+    color: white; /* Texto en blanco dentro del input */
+    outline: none; /* Eliminamos el contorno al hacer clic */
+}
+
+.search-form button {
+    border: none; /* Eliminamos el borde del botón */
+    padding: 10px; /* Espaciado interno */
+}
+
+.crear-buscar-container {
+    display: flex; /* Usamos flexbox para alinear los elementos */
+    justify-content: space-between; /* Separar el botón "CREAR" y el buscador */
+    align-items: center; /* Alinear verticalmente */
+    margin-bottom: 40px; /* Añado un margen inferior */
+    width: 100%; /* Ocupa toda la línea disponible */
+}
+
+.icon-container {
+    justify-content: flex-end; /* Muevo el buscador a la derecha */
+}
+
+.icon-container svg:hover {
+    transform: scale(1.2); /* Aumenta la mida cuando se pasa por encima */
+}
+
+.icon-margin {
+    margin-right: 15px; /* Añado un margen a la derecha */
+}
+
+.icon-container-admin svg:hover {
+    transform: scale(1.2); /* Aumenta la mida cuando se pasa por encima */
+}
+
+.margin-right {
+    margin-right: 15px; /* Añado un margen a la derecha */
+}
+
+.margin-left {
+    margin-left: 15px; /* Añado un margen a la izquierda */
+}
+
+.margin-top-bottom {
+    margin-top: 15px; /* Añado un margen arriba*/
+    margin-bottom: 15px; /* Añado un margen abajo */
+}
+
+.list-margin {
+    margin-right: 150px; /* Añado un margen a la derecha */
+    margin-left: 150px; /* Añado un margen a la izquierda */
+}
+
+.title {
+    font-size: 18px; /* Aumento un poco el tamaño del texto */
+}
+
+
+
+
+
+

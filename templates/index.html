@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>Netflix</title> <!-- Añado un título a la pestaña del navegador -->
+    <link rel="shortcut icon" href="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2023.ico"/> <!-- Agrego el icono a la pestaña del navegador con la dirección url -->
+
+    <!-- Hoja de estilo propia (main.css) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+
+    <!-- Fuente de Google Fonts para el título -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Tema de Bootstrap (LUX) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/lux/bootstrap.min.css" integrity="sha384-9+PGKSqjRdkeAU7Eu4nkJU8RFaH8ace8HGXnkiKMP9I9Te0GJ4/km3L1Z8tXigpG" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+    <!-- Divido la página en 4 -->
+    <main class="container p-4">
+        <!-- Logo de Netflix -->
+        <div class="text-center">
+            <img src="{{ url_for('static', filename='recursos/logo.png') }}" alt="Netflix Logo" style="height: 200px;">
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-4 offset-md-4 my-auto"> <!--Este div ocupará 4 columnas del espacio (centrado)-->
+                <div class="card card-custom"> <!--Creacion del objeto card-->
+                    <div class="card-header"> <!-- en card-header meteremos la parte en la que escribimos e introducimos algo -->
+                        <div class="card-header text-white">
+                            <form action="/login" method="post">
+                                <!-- Separamos el input del boton metiendo el input en este form-group
+                                para que los elementos no esten pegados y haya separacion entre ellos -->
+
+                                <!-- Campo de texto de correo elecrónico -->
+                                <div class="form-group">
+                                  <label class="form-label mt-4">Correo electrónico</label>
+                                  <input type="text" name="correo" placeholder="Correo electrónico" class="form-control" autofocus>
+                                </div>
+                                <!-- Campo de contraseña -->
+                                <div class="form-group">
+                                  <label class="form-label mt-4">Contraseña</label>
+                                  <input type="password" name="contrasena" placeholder="Contraseña" class="form-control" autofocus>
+                                </div>
+                                <!-- Botón inicio de sesión -->
+                                <button type="submit" class="btn btn-primary btn-block"> <!-- btn-block hace que el boton ocupe todo el ancho -->
+                                    Iniciar Sesión
+                                </button>
+                                <!-- Redirige al usuario a la dirección /registro para que allí se pueda crear una cuenta -->
+                                <a href="/registro" class="btn btn-secondary btn-block text-dark">
+                                    ¿No tienes cuenta? Regístrate
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Muestra mensaje de error -->
+                    {% if error_message %}
+                    <div class="alert alert-danger mt-3 text-center" role="alert">
+                        {{ error_message }}
+                    </div>
+                    {% endif %}
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>
