@@ -44,10 +44,17 @@
 
             <div class="card-body">
                  <div class="text-center">
+                    <!-- Muestra mensaje de error -->
+                    {% if mensaje_error %}
+                        <div class="alert alert-danger mt-3 text-center" role="alert">
+                            {{ mensaje_error }}
+                        </div>
+                    {% else %}
+                         <!-- Indico que el archivo es una imagen con extension png y de tipo base64 (para que el navegador lo reconozca) -->
+                         <img src="data:image/png;base64,{{ grafica_1 }}" alt="Gráfico de estadísticas" class="img-statistics">
+                          <img src="data:image/png;base64,{{ grafica_2 }}" alt="Gráfico de estadísticas" class="img-statistics">
 
-                     <!-- Indico que el archivo es una imagen con extension png y de tipo base64 (para que el navegador lo reconozca) -->
-                     <img src="data:image/png;base64,{{ grafica_1 }}" alt="Gráfico de estadísticas" class="img-statistics">
-                      <img src="data:image/png;base64,{{ grafica_2 }}" alt="Gráfico de estadísticas" class="img-statistics">
+                     {% endif %}
 
                 </div>
             </div>

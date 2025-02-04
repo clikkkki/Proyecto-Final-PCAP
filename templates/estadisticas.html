@@ -45,25 +45,20 @@
             <div class="card-body">
                  <div class="text-center">
 
-                    {% for grafica in lista_graficas %}
-
+                     <!-- Muestra mensaje de error -->
+                    {% if mensaje_error %}
+                        <div class="alert alert-danger mt-3 text-center" role="alert">
+                            {{ mensaje_error }}
+                        </div>
+                    {% else %}
                          <!-- Indico que el archivo es una imagen con extension png y de tipo base64 (para que el navegador lo reconozca) -->
-                         <img src="data:image/png;base64,{{ grafica }}" alt="Gráfico de estadísticas">
+                         <img src="data:image/png;base64,{{ grafica_usuarios }}" alt="Gráfico de estadísticas">
+                         <img src="data:image/png;base64,{{ grafica_peliculas }}" alt="Gráfico de estadísticas">
+                         <img src="data:image/png;base64,{{ grafica_series }}" alt="Gráfico de estadísticas">
 
-                     {% endfor %}
+                     {% endif %}
 
                 </div>
-
-                {% with messages = get_flashed_messages(with_categories=True) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-
             </div>
         </div>
 

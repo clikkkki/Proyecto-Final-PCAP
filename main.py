@@ -383,12 +383,15 @@ def crear_usuario():
                     Usuarios.correo == request.form['correo']).first():  # Comprueba si el correo introducido ya existe
                 raise ValueError('Este correo ya existe')
 
+            contra = request.form['contrasena'] # Hasheo la contraseña
+            contra_hasheada = generate_password_hash(contra, method='pbkdf2:sha256:600000', salt_length=16)
+
             cuenta = Usuarios(
                 nombre=request.form['nombre'],
                 apellidos=request.form['apellidos'],
                 usuario=request.form['usuario'],
                 correo=request.form['correo'],
-                contrasena=request.form['contrasena'],
+                contrasena=contra_hasheada,
                 es_admin=False
             )
 
@@ -425,7 +428,11 @@ def editar_usuario(id):
 
         for atributo,campo in zip(atributos[1:],campos): # Recorro las dos listas a la vez
             if campo: # Si el campo de texto no está vacío sobreescribo el valor del atributo
-                setattr(usuario,atributo,campo) # Asigno los valores de los atributos dinámicamente con 'setattr(objeto,atributo,valor)'
+                if atributo == 'correo' and db.session.query(Usuarios).filter(
+                    Usuarios.correo == campo).first():
+                    flash('El correo introducido ya existe')
+                else:
+                    setattr(usuario,atributo,campo) # Asigno los valores de los atributos dinámicamente con 'setattr(objeto,atributo,valor)'
 
         db.session.commit()
 
@@ -531,12 +538,12 @@ def crear_contenido():
 
             return render_template('contenido.html', error_message=e)
 
-        '''except Exception as e:
+        except Exception as e:
 
             # Capturar errores generales y pasar el mensaje a la plantilla
 
             return render_template('contenido.html',
-                                   error_message="Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.")'''
+                                   error_message="Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.")
 
         return redirect(request.referrer)  # Redirijo a la página anterior
 
@@ -666,12 +673,7 @@ def buscar_modo_admin(pagina):
 @app.route('/buscar-catalogo', methods=['GET','POST'])
 @login_required
 def buscar_catalogo():
-    """
-    Esta función gestiona la búsqueda dentro del catálogo según el tipo de contenido:
-    películas, series, favoritos o vistos. Recibe por POST un campo 'busqueda' y un campo 'tipo'.
-    Usa la sesión (si procede) o consultas filtradas a la base de datos para evitar
-    repetir la misma lógica de obtención de datos.
-    """
+
     # Obtengo el texto del formulario en minúsculas y borrando posibles espacios
     busqueda = request.form.get('busqueda', '').strip().lower()
 
@@ -757,200 +759,206 @@ def buscar_catalogo():
 @login_required
 def estadisticas_cliente():
 
-    n_peliculas = db.session.query(Contenido).filter_by(tipo=False).count() # Número de películas
-    n_series = db.session.query(Contenido).filter_by(tipo=True).count()  # Número de películas
-    n_contenido = db.session.query(Contenido).count()  # Número total de contenido
-    n_vistas_totales = db.session.query(UsuarioContenido).filter_by(
-        id_usuario=current_user.id,
-        vista=True).count()  # Número de películas y series vistas
+    try:
+        n_contenido = db.session.query(Contenido).count()  # Número total de contenido
+        n_vistas_totales = db.session.query(UsuarioContenido).filter_by(
+            id_usuario=current_user.id,
+            vista=True).count()  # Número de películas y series vistas
 
-    # A continuación, uso dos métodos distintos para obtener el número de películas y series vistas por el usuario actual.
-    # La primera consulta usa .count(), mientras que la segunda usa func.count().scalar() para mayor eficiencia.
+        # A continuación, uso dos métodos distintos para obtener el número de películas y series vistas por el usuario actual.
+        # La primera consulta usa .count(), mientras que la segunda usa func.count().scalar() para mayor eficiencia.
 
-    # 1. Número de películas vistas por el usuario
-    # Se usa .join() para unir Contenido con UsuarioContenido y así acceder a ambas tablas en una sola consulta.
-    #  Sin embargo, .count() puede generar una consulta SQL menos eficiente, ya que SQLAlchemy podría crear una subconsulta interna.
-    n_peliculas_vistas = db.session.query(Contenido).join(
-        UsuarioContenido,
-        Contenido.id == UsuarioContenido.id_contenido).filter(
-        UsuarioContenido.id_usuario == current_user.id,
-        UsuarioContenido.vista == True,  # Está marcada como vista
-        Contenido.tipo == False  # Es tipo película
-    ).count()
+        # 1. Número de películas vistas por el usuario
+        # Se usa .join() para unir Contenido con UsuarioContenido y así acceder a ambas tablas en una sola consulta.
+        #  Sin embargo, .count() puede generar una consulta SQL menos eficiente, ya que SQLAlchemy podría crear una subconsulta interna.
+        n_peliculas_vistas = db.session.query(Contenido).join(
+            UsuarioContenido,
+            Contenido.id == UsuarioContenido.id_contenido).filter(
+            UsuarioContenido.id_usuario == current_user.id,
+            UsuarioContenido.vista == True,  # Está marcada como vista
+            Contenido.tipo == False  # Es tipo película
+        ).count()
 
-    # 2. Número de series vistas por el usuario
-    # Se usa func.count() para contar los registros directamente en la base de datos, sin necesidad de recuperar objetos en memoria.
-    # Esto genera una consulta SQL más optimizada con COUNT(*), lo que la hace más eficiente que .count().
-    n_series_vistas = db.session.query(func.count(Contenido.id)).join(
-        UsuarioContenido,
-        Contenido.id == UsuarioContenido.id_contenido).filter(
-        UsuarioContenido.id_usuario == current_user.id,
-        UsuarioContenido.vista == True,  # Está marcada como vista
-        Contenido.tipo == True  # Es tipo serie
-    ).scalar()  # scalar() obtiene el valor numérico directamente, sin envolverlo en una tupla
+        # 2. Número de series vistas por el usuario
+        # Se usa func.count() para contar los registros directamente en la base de datos, sin necesidad de recuperar objetos en memoria.
+        # Esto genera una consulta SQL más optimizada con COUNT(*), lo que la hace más eficiente que .count().
+        n_series_vistas = db.session.query(func.count(Contenido.id)).join(
+            UsuarioContenido,
+            Contenido.id == UsuarioContenido.id_contenido).filter(
+            UsuarioContenido.id_usuario == current_user.id,
+            UsuarioContenido.vista == True,  # Está marcada como vista
+            Contenido.tipo == True  # Es tipo serie
+        ).scalar()  # scalar() obtiene el valor numérico directamente, sin envolverlo en una tupla
 
-    # 3. Cantidad de tiempo invertido en ver Películas
-    tiempo_peliculas = (db.session.query(func.sum(Contenido.duracion)).join(
-        UsuarioContenido,
-        Contenido.id == UsuarioContenido.id_contenido).filter(
-        UsuarioContenido.id_usuario == current_user.id,
-        UsuarioContenido.vista == True,  # Está marcada como vista
-        Contenido.tipo == False  # Es tipo película
-    ).scalar()) / 60 # Divido entre 60 para mostrarlo en horas y no en minutos
+        # 3. Cantidad de tiempo invertido en ver Películas
+        tiempo_peliculas = (db.session.query(func.sum(Contenido.duracion)).join(
+            UsuarioContenido,
+            Contenido.id == UsuarioContenido.id_contenido).filter(
+            UsuarioContenido.id_usuario == current_user.id,
+            UsuarioContenido.vista == True,  # Está marcada como vista
+            Contenido.tipo == False  # Es tipo película
+        ).scalar()) / 60 # Divido entre 60 para mostrarlo en horas y no en minutos
 
-    # 4. Tiempo invertido en ver Series
-    # Multiplico la duración media por capítulo por el número de capítulos
-    tiempo_series = (db.session.query(func.sum(Contenido.duracion * Contenido.nCapitulos)).join(
-        UsuarioContenido,
-        Contenido.id == UsuarioContenido.id_contenido).filter(
-        UsuarioContenido.id_usuario == current_user.id,
-        UsuarioContenido.vista == True,  # Está marcada como vista
-        Contenido.tipo == True  # Es tipo serie
-    ).scalar()) / 60 # Divido entre 60 para mostrarlo en horas y no en minutos
+        # 4. Tiempo invertido en ver Series
+        # Multiplico la duración media por capítulo por el número de capítulos
+        tiempo_series = (db.session.query(func.sum(Contenido.duracion * Contenido.nCapitulos)).join(
+            UsuarioContenido,
+            Contenido.id == UsuarioContenido.id_contenido).filter(
+            UsuarioContenido.id_usuario == current_user.id,
+            UsuarioContenido.vista == True,  # Está marcada como vista
+            Contenido.tipo == True  # Es tipo serie
+        ).scalar()) / 60 # Divido entre 60 para mostrarlo en horas y no en minutos
 
-    # Tiempo total invertido en ver el contendido de la plataforma
-    tiempo_total = tiempo_series + tiempo_peliculas
+        # Tiempo total invertido en ver el contendido de la plataforma
+        tiempo_total = tiempo_series + tiempo_peliculas
 
-    # -------------------------------------------------------------------------------------------------------------------------------
-    #                                                    GRÁFICA nº1
-    # -------------------------------------------------------------------------------------------------------------------------------
-    # Primero de todo creo el DataFrame con los datos registrados previamente con el método pd.DataFrame()
-    df = pd.DataFrame({
-        'Categoría': ['Películas', 'Series', 'Total'],  # Etiquetas para el eje X
-        'Valor': [n_peliculas_vistas, n_series_vistas, n_vistas_totales]  # Valores para el eje Y
-    })
+        # -------------------------------------------------------------------------------------------------------------------------------
+        #                                                    GRÁFICA nº1 - contenido visto
+        # -------------------------------------------------------------------------------------------------------------------------------
+        # Primero de todo creo el DataFrame con los datos registrados previamente con el método pd.DataFrame()
+        df = pd.DataFrame({
+            'Categoría': ['Películas', 'Series', 'Total'],  # Etiquetas para el eje X
+            'Valor': [n_peliculas_vistas, n_series_vistas, n_vistas_totales]  # Valores para el eje Y
+        })
 
-    # Configuro el estilo de Seaborn
-    sns.set_theme(style="darkgrid")
-    plt.style.use("dark_background")
+        # Configuro el estilo de Seaborn
+        sns.set_theme(style="darkgrid")
+        plt.style.use("dark_background")
 
-    # Creo el gráfico de barras
-    plt.figure(figsize=(10, 6))  # Tamaño del gráfico
-    ax = sns.barplot(data=df, x='Categoría', y='Valor', palette="Reds")
+        # Creo el gráfico de barras
+        plt.figure(figsize=(10, 6))  # Tamaño del gráfico
+        ax = sns.barplot(data=df, x='Categoría', y='Valor', palette="Reds")
 
-    # Personalizo el gráfico
-    plt.ylim(0, n_contenido)  # Límite del eje Y hasta el nº de elementos de la tabla Contenido
-    plt.xlabel("")  # Quitar etiqueta del eje X
-    plt.ylabel("")  # Etiqueta para el eje Y
-    plt.title("Películas y series vistas")  # Título del gráfico
+        # Personalizo el gráfico
+        plt.ylim(0, n_contenido)  # Límite del eje Y hasta el nº de elementos de la tabla Contenido
+        plt.xlabel("")  # Quitar etiqueta del eje X
+        plt.ylabel("")  # Etiqueta para el eje Y
+        plt.title("Películas y series vistas")  # Título del gráfico
 
-    # Cambio el color de los ejes
-    ax.xaxis.label.set_color('white')
-    ax.yaxis.label.set_color('white')
-    ax.tick_params(colors='white')
+        # Cambio el color de los ejes
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.tick_params(colors='white')
 
-    grafica_1_io = io.BytesIO() # Creo un buffer (espacio de memoria temporal)
-    plt.savefig(grafica_1_io, format='png', dpi=100, bbox_inches='tight') # Guardo la imagen de la gráfica en el buffer
-    # Especifico el formato 'png', resolución y ajusto los márgenes
-    plt.close() # Cierro la figura de Matplotlib para liberar memoria
-    grafica_1_io.seek(0) # Muevo el puntero al inicio del archivo
+        grafica_1_io = io.BytesIO() # Creo un buffer (espacio de memoria temporal)
+        plt.savefig(grafica_1_io, format='png', dpi=100, bbox_inches='tight') # Guardo la imagen de la gráfica en el buffer
+        # Especifico el formato 'png', resolución y ajusto los márgenes
+        plt.close() # Cierro la figura de Matplotlib para liberar memoria
+        grafica_1_io.seek(0) # Muevo el puntero al inicio del archivo
 
-    grafica_1_64 = base64.b64encode(grafica_1_io.getvalue()).decode('utf-8') # Convierto la imagen en un string
-    # base64.b64encode() convierte de binario (bytes) a Base64, pero en formato de bytes (b'')
-    # y con .decode('utf-8') lo que estoy haciendo es transformar de bytes a texto legible (ya que HTML no puede manejar binarios)
+        grafica_1_64 = base64.b64encode(grafica_1_io.getvalue()).decode('utf-8') # Convierto la imagen en un string
+        # base64.b64encode() convierte de binario (bytes) a Base64, pero en formato de bytes (b'')
+        # y con .decode('utf-8') lo que estoy haciendo es transformar de bytes a texto legible (ya que HTML no puede manejar binarios)
 
-    # -------------------------------------------------------------------------------------------------------------------------------
-    #                                                    GRÁFICA nº2
-    # -------------------------------------------------------------------------------------------------------------------------------
-    # Primero de todo creo el DataFrame con los datos registrados previamente con el método pd.DataFrame()
-    df = pd.DataFrame({
-        'Categoría': ['Películas', 'Series', 'Total'],  # Etiquetas para el eje X
-        'Valor': [tiempo_peliculas, tiempo_series, tiempo_total]  # Valores para el eje Y
-    })
+        # -------------------------------------------------------------------------------------------------------------------------------
+        #                                                    GRÁFICA nº2 - tiempo de actividad
+        # -------------------------------------------------------------------------------------------------------------------------------
+        # Primero de todo creo el DataFrame con los datos registrados previamente con el método pd.DataFrame()
+        df = pd.DataFrame({
+            'Categoría': ['Películas', 'Series', 'Total'],  # Etiquetas para el eje X
+            'Valor': [tiempo_peliculas, tiempo_series, tiempo_total]  # Valores para el eje Y
+        })
 
-    # Configuro el estilo de Seaborn
-    sns.set_theme(style="darkgrid")
-    plt.style.use("dark_background")
+        # Configuro el estilo de Seaborn
+        sns.set_theme(style="darkgrid")
+        plt.style.use("dark_background")
 
-    # Creo el gráfico de barras
-    plt.figure(figsize=(10, 6))  # Tamaño del gráfico
-    ax = sns.barplot(data=df, x='Categoría', y='Valor', palette="Reds")
+        # Creo el gráfico de barras
+        plt.figure(figsize=(10, 6))  # Tamaño del gráfico
+        ax = sns.barplot(data=df, x='Categoría', y='Valor', palette="Reds")
 
-    # Personalizo el gráfico
-    plt.ylim(0, math.ceil(tiempo_total / 100)*100)  # Límite del eje Y es el tiempo total
-    # La intención és que el límite del eje varíe según el tiempo invertido para mejor visualización de la gráfica
-    # y para no poner como límite el tiempo total, lo que hago es redondearlo a la siguiente cifra multiple de 100
-    plt.xlabel("")  # Quitar etiqueta del eje X
-    plt.ylabel("")  # Etiqueta para el eje Y
-    plt.title("Tiempo dedicado a ver películas y series (en horas)")  # Título del gráfico
+        # Personalizo el gráfico
+        plt.ylim(0, math.ceil(tiempo_total / 100)*100)  # Límite del eje Y es el tiempo total
+        # La intención és que el límite del eje varíe según el tiempo invertido para mejor visualización de la gráfica
+        # y para no poner como límite el tiempo total, lo que hago es redondearlo a la siguiente cifra multiple de 100
+        plt.xlabel("")  # Quitar etiqueta del eje X
+        plt.ylabel("")  # Etiqueta para el eje Y
+        plt.title("Tiempo dedicado a ver películas y series (en horas)")  # Título del gráfico
 
-    # Cambio el color de los ejes
-    ax.xaxis.label.set_color('white')
-    ax.yaxis.label.set_color('white')
-    ax.tick_params(colors='white')
+        # Cambio el color de los ejes
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.tick_params(colors='white')
 
-    grafica_2_io = io.BytesIO()  # Creo un buffer (espacio de memoria temporal)
-    plt.savefig(grafica_2_io, format='png', dpi=100, bbox_inches='tight')  # Guardo la imagen de la gráfica en el buffer
-    # Especifico el formato 'png', resolución y ajusto los márgenes
-    plt.close()  # Cierro la figura de Matplotlib para liberar memoria
-    grafica_2_io.seek(0)  # Muevo el puntero al inicio del archivo
+        grafica_2_io = io.BytesIO()  # Creo un buffer (espacio de memoria temporal)
+        plt.savefig(grafica_2_io, format='png', dpi=100, bbox_inches='tight')  # Guardo la imagen de la gráfica en el buffer
+        # Especifico el formato 'png', resolución y ajusto los márgenes
+        plt.close()  # Cierro la figura de Matplotlib para liberar memoria
+        grafica_2_io.seek(0)  # Muevo el puntero al inicio del archivo
 
-    grafica_2_64 = base64.b64encode(grafica_2_io.getvalue()).decode('utf-8')  # Convierto la imagen en un string
+        grafica_2_64 = base64.b64encode(grafica_2_io.getvalue()).decode('utf-8')  # Convierto la imagen en un string
 
-    return render_template(
-        'mi_actividad.html',
-        grafica_1 = grafica_1_64,
-        grafica_2 = grafica_2_64
-    ) # Renderizo la pantalla y envío las gráficas
+
+        return render_template(
+            'mi_actividad.html',
+            grafica_1 = grafica_1_64,
+            grafica_2 = grafica_2_64
+        ) # Renderizo la pantalla y envío las gráficas
+
+    except TypeError:
+
+        return render_template('mi_actividad.html', mensaje_error = 'No hay suficientes datos para generar las gráficas.')
 
 
 @app.route('/estadísticas')
 @login_required
 def estadisticas_administrador():
 
-    # -------------------------------------------------------------------------------------------------------------------------------
-    #                                                    CONSULTAS A LA DB
-    # -------------------------------------------------------------------------------------------------------------------------------
+    try:
+        # -------------------------------------------------------------------------------------------------------------------------------
+        #                                                    CONSULTAS A LA DB
+        # -------------------------------------------------------------------------------------------------------------------------------
 
-    top_5_usuarios = db.session.query(
-        Usuarios.usuario,  # Nombre del usuario
-        (func.sum(Contenido.duracion * Contenido.nCapitulos # Calculo el tiempo total invertido
-        ) / 60).label("tiempo_invertido")  # Convierto a horas
-    ).join(
-        UsuarioContenido, Usuarios.id == UsuarioContenido.id_usuario # Relaciono las tablas
-    ).join(
-        Contenido, UsuarioContenido.id_contenido == Contenido.id # Relaciono las tablas
-    ).filter(
-        UsuarioContenido.vista == True  # Solo incluye contenidos vistos
-    ).group_by(
-        Usuarios.id  # Agrupo por usuario
-    ).order_by(
-        desc("tiempo_invertido")  # Ordeno en orden descendente
-    ).limit(5).all()  # Solo los 5 primeros
+        top_5_usuarios = db.session.query(
+            Usuarios.usuario,  # Nombre del usuario
+            (func.sum(Contenido.duracion * Contenido.nCapitulos # Calculo el tiempo total invertido
+            ) / 60).label("tiempo_invertido")  # Convierto a horas
+        ).join(
+            UsuarioContenido, Usuarios.id == UsuarioContenido.id_usuario # Relaciono las tablas
+        ).join(
+            Contenido, UsuarioContenido.id_contenido == Contenido.id # Relaciono las tablas
+        ).filter(
+            UsuarioContenido.vista == True  # Solo incluye contenidos vistos
+        ).group_by(
+            Usuarios.id  # Agrupo por usuario
+        ).order_by(
+            desc("tiempo_invertido")  # Ordeno en orden descendente
+        ).limit(5).all()  # Solo los 5 primeros
 
-    top_5_peliculas = db.session.query(
-        Contenido.titulo,
-        func.count(UsuarioContenido.id_contenido).label('reproducciones')
-    ).join(
-        UsuarioContenido,
-        Contenido.id == UsuarioContenido.id_contenido
-    ).filter(
-        UsuarioContenido.vista == True, # Solo incluye contenidos vistos
-        Contenido.tipo == False # Solo incluye películas
-    ).group_by(
-        Contenido.id
-    ).order_by(
-        desc('reproducciones')
-    ).limit(5).all()
+        top_5_peliculas = db.session.query(
+            Contenido.titulo,
+            func.count(UsuarioContenido.id_contenido).label('reproducciones')
+        ).join(
+            UsuarioContenido,
+            Contenido.id == UsuarioContenido.id_contenido
+        ).filter(
+            UsuarioContenido.vista == True, # Solo incluye contenidos vistos
+            Contenido.tipo == False # Solo incluye películas
+        ).group_by(
+            Contenido.id
+        ).order_by(
+            desc('reproducciones')
+        ).limit(5).all()
 
-    top_5_series = db.session.query(
-        Contenido.titulo,
-        func.count(UsuarioContenido.id_contenido).label('reproducciones')
-    ).join(
-        UsuarioContenido,
-        Contenido.id == UsuarioContenido.id_contenido
-    ).filter(
-        UsuarioContenido.vista == True, # Solo incluye contenidos vistos
-        Contenido.tipo == True # Solo incluye series
-    ).group_by(
-        Contenido.id
-    ).order_by(
-        desc('reproducciones')
-    ).limit(5).all()
+        top_5_series = db.session.query(
+            Contenido.titulo,
+            func.count(UsuarioContenido.id_contenido).label('reproducciones')
+        ).join(
+            UsuarioContenido,
+            Contenido.id == UsuarioContenido.id_contenido
+        ).filter(
+            UsuarioContenido.vista == True, # Solo incluye contenidos vistos
+            Contenido.tipo == True # Solo incluye series
+        ).group_by(
+            Contenido.id
+        ).order_by(
+            desc('reproducciones')
+        ).limit(5).all()
 
-    graficas = [] # En esta lista voy a añadir las gráficas
+        # Si no hay datos envio un 'ValueError' que voy a capturar más adelante para mostrar un mensaje por pantalla
+        if not top_5_peliculas or not top_5_series or not top_5_usuarios:
+            raise ValueError
 
-    if top_5_usuarios:
         tiempo_usuario_mas_activo = top_5_usuarios[0][1]
 
         # -------------------------------------------------------------------------------------------------------------------------------
@@ -994,9 +1002,6 @@ def estadisticas_administrador():
         # base64.b64encode() convierte de binario (bytes) a Base64, pero en formato de bytes (b'')
         # y con .decode('utf-8') lo que estoy haciendo es transformar de bytes a texto legible (ya que HTML no puede manejar binarios)
 
-        graficas.append(grafica_usuarios_64)
-
-    if top_5_peliculas:
         top_repeticiones_peliculas = top_5_peliculas[0][1]
 
         # -------------------------------------------------------------------------------------------------------------------------------
@@ -1040,9 +1045,6 @@ def estadisticas_administrador():
         # base64.b64encode() convierte de binario (bytes) a Base64, pero en formato de bytes (b'')
         # y con .decode('utf-8') lo que estoy haciendo es transformar de bytes a texto legible (ya que HTML no puede manejar binarios)
 
-        graficas.append(grafica_peliculas_64)
-
-    if top_5_series:
         top_repeticiones_series = top_5_series[0][1]
 
         # -------------------------------------------------------------------------------------------------------------------------------
@@ -1086,16 +1088,21 @@ def estadisticas_administrador():
         # base64.b64encode() convierte de binario (bytes) a Base64, pero en formato de bytes (b'')
         # y con .decode('utf-8') lo que estoy haciendo es transformar de bytes a texto legible (ya que HTML no puede manejar binarios)
 
-        graficas.append(grafica_series_64)
 
-    if graficas:
         return render_template(
             'estadisticas.html',
-            lista_graficas = graficas
+            grafica_usuarios = grafica_usuarios_64,
+            grafica_peliculas = grafica_peliculas_64,
+            grafica_series = grafica_series_64
         ) # Renderizo la pantalla y envío las gráficas
-    else:
-        flash('No hay suficientes datos')
-        return redirect(url_for('editar'))  # Redirijo a la página anterior
+
+    except TypeError:
+
+        return render_template('estadisticas.html', mensaje_error='No hay suficientes datos para generar las gráficas.')
+
+    except ValueError:
+
+        return render_template('estadisticas.html', mensaje_error='No hay suficientes datos para generar las gráficas.')
 
 
 def crear_cuenta_admin():
